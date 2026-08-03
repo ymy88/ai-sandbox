@@ -1,0 +1,27 @@
+#!/bin/sh
+# =====================================================================
+#  sandboxed  -  run a command (an AI coding agent) under ~/ai-sandbox.sb
+#
+#   usage:   sandboxed <command...>
+#   example: cd ~/projects/myapp && sandboxed claude
+#            cd ~/projects/myapp && sandboxed opencode
+#
+#   WORKSPACE is bound to the directory you launch from (your project),
+#   which is the only place the agent may edit freely (plus AI config /
+#   cache / toolchain dirs; secrets like ~/.ssh ~/.aws are blocked).
+#
+#   Install:  put this file on PATH (e.g. ~/bin/sandboxed) and chmod +x,
+#             or `source` the function variant below in your shell rc.
+# =====================================================================
+exec sandbox-exec -f "$HOME/ai-sandbox.sb" \
+    -D HOME="$HOME" -D WORKSPACE="$PWD" "$@"
+
+# ---- alternative: shell function (no separate script needed) ----------
+# Add to ~/.zshrc or ~/.bashrc:
+#
+#   sandboxed() {
+#     sandbox-exec -f "$HOME/ai-sandbox.sb" \
+#       -D HOME="$HOME" -D WORKSPACE="$PWD" "$@"
+#   }
+#
+# Then: `cd ~/code/proj && sandboxed claude`

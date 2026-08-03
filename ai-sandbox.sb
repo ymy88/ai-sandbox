@@ -1,0 +1,185 @@
+(version 1)
+;; =====================================================================
+;;  ai-sandbox.sb  -  Seatbelt profile for sandboxing AI coding agents
+;;  (Claude Code, OpenCode, Codex, Gemini CLI, Qwen, Aider, ...)
+;;
+;;  Tested on macOS 26.x (Tahoe). Note: `sandbox-exec` is marked
+;;  deprecated by Apple, but the underlying Seatbelt subsystem is fully
+;;  functional and still the standard macOS process sandbox.
+;;
+;;  SEMANTICS: most-specific rule wins. `(allow default)` is the baseline;
+;;  narrower `(deny ...)` / `(allow ...)` rules override it. Order does
+;;  not matter for specificity, but we keep a clear order for readability.
+;;
+;;  USAGE:
+;;    sandbox-exec -f ~/ai-sandbox.sb \
+;;      -D HOME="$HOME" -D WORKSPACE="$PWD" \
+;;      <command...>
+;;
+;;  PARAMETERS:
+;;    HOME       absolute path of your home dir       (e.g. /Users/you)
+;;    WORKSPACE  absolute path of the project to edit  (e.g. "$PWD")
+;;
+;;  POLICY SUMMARY
+;;    * whole disk READABLE            (req 1)
+;;    * WORKSPACE WRITABLE             (req 2)
+;;    * AI config dirs WRITABLE        (req 3)
+;;    * cache dirs WRITABLE             (req 4)
+;;    * ~/.npm WRITABLE                 (req 5)
+;;    * toolchain / local dirs WRITABLE (req 6)
+;;    * secret stores READ-ONLY (readable, not writable)  (req 7)
+;; =====================================================================
+
+;; ---- baseline: allow everything, then carve out writes & secrets ----
+(allow default)            ; reads, network, process, mach, signal, sysctl, ipc
+(deny file-write*)         ; deny ALL writes; re-enable specific paths below
+
+;; ---- system temp / devices (always needed) ----
+;; NOTE: /tmp is a symlink -> use /private/tmp (Seatbelt matches real paths)
+(allow file-write* (subpath "/private/tmp"))
+(allow file-write* (subpath "/private/var/tmp"))
+(allow file-write* (subpath "/private/var/folders"))   ; per-user $TMPDIR lives here
+(allow file-write* (subpath "/dev/null"))
+(allow file-write* (subpath "/dev/tty"))
+
+;; ---- req 2: the project the agent is working on ----
+(allow file-write* (subpath (param "WORKSPACE")))
+
+;; ---- req 3: AI agent config dirs (writable; readable via allow-default) ----
+(allow file-write* (subpath (string-append (param "HOME") "/.claude")))
+(allow file-write* (subpath (string-append (param "HOME") "/.claude.json")))
+(allow file-write* (subpath (string-append (param "HOME") "/.codex")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/claude")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/claude-code")))
+(allow file-write* (subpath (string-append (param "HOME") "/.opencode")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/opencode")))
+(allow file-write* (subpath (string-append (param "HOME") "/.cursor")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/cursor")))
+(allow file-write* (subpath (string-append (param "HOME") "/.continue")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/continue")))
+(allow file-write* (subpath (string-append (param "HOME") "/.gemini")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/gemini")))
+(allow file-write* (subpath (string-append (param "HOME") "/.qwen")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/qwen")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/anthropic")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/openai")))
+(allow file-write* (subpath (string-append (param "HOME") "/.aider.conf.yml")))
+(allow file-write* (subpath (string-append (param "HOME") "/.aider.chat.history.md")))
+(allow file-write* (subpath (string-append (param "HOME") "/.aider.input.history")))
+(allow file-write* (subpath (string-append (param "HOME") "/.aider.model.settings.yml")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/aider")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/cline")))
+(allow file-write* (subpath (string-append (param "HOME") "/.config/roo")))
+
+;; ---- req 4: caches ----
+(allow file-write* (subpath (string-append (param "HOME") "/Library/Caches")))
+(allow file-write* (subpath (string-append (param "HOME") "/.cache")))
+(allow file-write* (subpath (string-append (param "HOME") "/.cargo")))
+(allow file-write* (subpath (string-append (param "HOME") "/.rustup")))
+(allow file-write* (subpath (string-append (param "HOME") "/.gradle")))
+(allow file-write* (subpath (string-append (param "HOME") "/.m2")))
+(allow file-write* (subpath (string-append (param "HOME") "/.bundle")))
+(allow file-write* (subpath (string-append (param "HOME") "/Library/pnpm")))
+(allow file-write* (subpath (string-append (param "HOME") "/.pnpm-store")))
+(allow file-write* (subpath (string-append (param "HOME") "/.ollama")))
+
+;; ---- req 5: ~/.npm ----
+(allow file-write* (subpath (string-append (param "HOME") "/.npm")))
+
+;; ---- req 6: other dirs AI toolchains need ----
+(allow file-write* (subpath (string-append (param "HOME") "/.local")))        ; pip --user, pipx
+(allow file-write* (subpath (string-append (param "HOME") "/.bun")))
+(allow file-write* (subpath (string-append (param "HOME") "/.deno")))
+(allow file-write* (subpath (string-append (param "HOME") "/.volta")))         ; node version manager
+(allow file-write* (subpath (string-append (param "HOME") "/.fnm")))
+(allow file-write* (subpath (string-append (param "HOME") "/.nvm")))
+(allow file-write* (subpath (string-append (param "HOME") "/.pyenv")))
+(allow file-write* (subpath (string-append (param "HOME") "/.rbenv")))
+(allow file-write* (subpath (string-append (param "HOME") "/.asdf")))
+(allow file-write* (subpath (string-append (param "HOME") "/go")))            ; GOPATH
+(allow file-write* (subpath (string-append (param "HOME") "/.gem")))           ; rubygems cache (creds file denied below)
+(allow file-write* (subpath (string-append (param "HOME") "/.gitconfig")))    ; `git config --global`
+(allow file-write* (subpath (string-append (param "HOME") "/.config/git")))
+(allow file-write* (subpath (string-append (param "HOME") "/.zsh_history")))
+(allow file-write* (subpath (string-append (param "HOME") "/.bash_history")))
+(allow file-write* (subpath (string-append (param "HOME") "/Library/Logs")))
+(allow file-write* (subpath (string-append (param "HOME") "/Library/Preferences")))
+(allow file-write* (subpath (string-append (param "HOME") "/Library/Application Support")))
+(allow file-write* (subpath (string-append (param "HOME") "/Library/HTTPStorages")))
+(allow file-write* (subpath (string-append (param "HOME") "/Library/Saved Application State")))
+;; OPTIONAL - uncomment so package managers can install system-wide:
+;; (allow file-write* (subpath "/opt/homebrew"))    ; Apple Silicon Homebrew
+;; (allow file-write* (subpath "/usr/local"))       ; Intel Homebrew / global npm
+
+;; =====================================================================
+;;  req 7: SECRET STORES  -  READ-ONLY (readable, NOT writable)
+;;
+;;  Reads are wide open (whole disk). These denies block WRITES only, so the
+;;  agent can READ ~/.ssh, ~/.aws, etc. (e.g. for git-over-ssh, AWS SDKs)
+;;  but can NEVER modify them. Most of these are already blocked by the global
+;;  `(deny file-write*)` above; they are repeated explicitly so the intent
+;;  survives any future allowlist change. The one that MATTERS is
+;;  ~/.gem/credentials: its parent ~/.gem IS writable (gem cache), so without
+;;  this deny the credentials file would be writable too.
+;; =====================================================================
+(deny file-write* (subpath (string-append (param "HOME") "/.ssh")))
+(deny file-write* (subpath (string-append (param "HOME") "/.aws")))
+(deny file-write* (subpath (string-append (param "HOME") "/.gnupg")))
+(deny file-write* (subpath (string-append (param "HOME") "/.docker")))
+(deny file-write* (subpath (string-append (param "HOME") "/.kube")))
+(deny file-write* (subpath (string-append (param "HOME") "/.config/gcloud")))
+(deny file-write* (subpath (string-append (param "HOME") "/.azure")))
+(deny file-write* (subpath (string-append (param "HOME") "/.config/azure")))
+(deny file-write* (subpath (string-append (param "HOME") "/.config/gh")))
+(deny file-write* (subpath (string-append (param "HOME") "/.netrc")))
+(deny file-write* (subpath (string-append (param "HOME") "/.npmrc")))
+(deny file-write* (subpath (string-append (param "HOME") "/.pypirc")))
+(deny file-write* (subpath (string-append (param "HOME") "/.gem/credentials")))
+(deny file-write* (subpath (string-append (param "HOME") "/Library/Keychains")))
+;; Allow ssh to update ~/.ssh/known_hosts (and ONLY that file) for new hosts.
+;; More specific than the ~/.ssh write-deny above, so keys/config stay read-only.
+(allow file-write* (subpath (string-append (param "HOME") "/.ssh/known_hosts")))
+
+;; =====================================================================
+;;  NOTES & TRADE-OFFS  (please read)
+;; =====================================================================
+;;  Policy intent: READS are wide open (whole disk); WRITES are locked to an
+;;  allowlist. Secret stores are READ-ONLY: the agent may read ~/.ssh, ~/.aws,
+;;  etc. (so git-over-ssh, AWS SDKs, etc. work) but can NEVER modify them.
+;;  (Per request: leakage is not the concern - tampering is.)
+;;
+;;  * The secret write-denies above are mostly redundant (the global
+;;    `(deny file-write*)` already blocks them) but kept explicit so the
+;;    intent survives future allowlist changes. The one that MATTERS is
+;;    ~/.gem/credentials: its parent ~/.gem IS writable (gem cache), so
+;;    without that deny the credentials file would be writable.
+;;
+;;  * SSH to a NEW host: ssh appends the host key to ~/.ssh/known_hosts, which
+;;    is allowlisted above (and ONLY that file - keys/config stay read-only).
+;;    Verified with a real ssh to github. The rare case of REPLACING an
+;;    existing host key (key rotation) uses tmpfile+rename needing dir write on
+;;    ~/.ssh, which is blocked - run that outside the sandbox.
+;;
+;;  * LOGIN operations that WRITE tokens - `npm login`, `gh auth login`,
+;;    `pip login`, `aws configure`, `gcloud auth`, etc. - FAIL inside the
+;;    sandbox (credential files are read-only). Run those outside the sandbox;
+;;    the agent can then READ the resulting tokens inside.
+;;
+;;  * NETWORK is ALLOWED (the agent must reach its model API).
+;;
+;;  * macOS KEYCHAIN writes via Mach IPC are not blocked (blocking mach breaks
+;;    too much). A sandboxed process could potentially add/modify keychain
+;;    items subject to ACLs; keep sensitive items in a separate keychain if
+;;    that matters.
+;;
+;;  * The agent's OWN config/auth files (e.g. ~/.claude/.credentials.json,
+;;    ~/.codex/auth.json) are readable AND writable (they live under the
+;;    allowlisted AI config dirs) - the agent needs to refresh its own login.
+;;
+;;  * OPTIONAL - make READS stricter too (uncomment to also block these):
+;;    ; (deny file-read* (subpath (string-append (param "HOME") "/Library/Mail")))
+;;    ; (deny file-read* (subpath (string-append (param "HOME") "/Library/Messages")))
+;;    ; (deny file-read* (subpath (string-append (param "HOME") "/Library/Calendars")))
+;;    ; (deny file-read* (subpath (string-append (param "HOME") "/Library/Address Book")))
+;;    ; (deny file-read* (subpath (string-append (param "HOME") "/Library/Safari")))
+;;    ; (deny file-read* (subpath (string-append (param "HOME") "/Library/Photos")))
