@@ -56,6 +56,7 @@
 (allow file-write* (subpath (string-append (param "HOME") "/.cursor")))
 (allow file-write* (subpath (string-append (param "HOME") "/.config/cursor")))
 (allow file-write* (subpath (string-append (param "HOME") "/.pi")))
+(allow file-write* (subpath (string-append (param "HOME") "/.agents")))
 (allow file-write* (subpath (string-append (param "HOME") "/.continue")))
 (allow file-write* (subpath (string-append (param "HOME") "/.config/continue")))
 (allow file-write* (subpath (string-append (param "HOME") "/.gemini")))
