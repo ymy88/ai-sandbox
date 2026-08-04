@@ -25,9 +25,15 @@ while [ -L "$self" ]; do
 done
 REPO_DIR=$(CDPATH= cd -P -- "$(dirname -- "$self")" && pwd)
 SB="$REPO_DIR/ai-sandbox.sb"
+SB_RO="$REPO_DIR/ai-sandbox-ro.sb"
 
 if [ ! -f "$SB" ]; then
   printf 'ERROR: ai-sandbox.sb not found at: %s\n' "$SB" >&2
+  printf '       Run this script from inside the cloned ai-sandbox repo.\n' >&2
+  exit 1
+fi
+if [ ! -f "$SB_RO" ]; then
+  printf 'ERROR: ai-sandbox-ro.sb not found at: %s\n' "$SB_RO" >&2
   printf '       Run this script from inside the cloned ai-sandbox repo.\n' >&2
   exit 1
 fi
@@ -63,6 +69,10 @@ fi
 # --- the function (SB path baked in; $HOME/$PWD/$@ expand at call time) ---
 func="sandboxed() {
   sandbox-exec -f \"$SB\" \\
+    -D HOME=\"\$HOME\" -D WORKSPACE=\"\$PWD\" \"\$@\"
+}
+sandboxed-ro() {
+  sandbox-exec -f \"$SB_RO\" \\
     -D HOME=\"\$HOME\" -D WORKSPACE=\"\$PWD\" \"\$@\"
 }"
 

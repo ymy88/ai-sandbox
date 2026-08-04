@@ -68,6 +68,23 @@ cd ~/your/project
 /path/to/ai-sandbox/sandboxed claude
 ```
 
+### Read-only / analyze mode
+
+For query/analysis work where the agent should **not** modify the code, use the
+stricter `sandboxed-ro` (profile: `ai-sandbox-ro.sb`). It keeps reads wide open
+and network allowed, but makes the **project dir (incl. `.git`) read-only** and
+locks down toolchain installs and global git config, while still letting the
+agent write its own session/config, caches, and temp.
+
+```sh
+cd ~/your/project
+sandboxed-ro claude          # analyze only; cannot edit the project or .git
+```
+
+`git log/diff/show/blame` work; `commit/checkout/stash/fetch/pull`, file edits,
+and `npm install` into the project all fail. Logins (`npm login`, `gh auth
+login`, …) still fail - run those outside, the agent reads tokens inside.
+
 ## Caveats (please read)
 
 - **Network is allowed** (the agent must reach its model API). This is *not* an
@@ -93,8 +110,11 @@ cd ~/your/project
 
 - [`ai-sandbox.sb`](ai-sandbox.sb) - the Seatbelt profile (heavily commented;
   tweak the allow/deny lists to taste)
-- [`install.sh`](install.sh) - installs the `sandboxed` shell function
+- [`ai-sandbox-ro.sb`](ai-sandbox-ro.sb) - stricter read-only/analyze profile
+  (project + toolchains read-only; AI session/caches writable)
+- [`install.sh`](install.sh) - installs the `sandboxed` and `sandboxed-ro` shell functions
 - [`sandboxed`](sandboxed) - self-locating wrapper script (no-install option)
+- [`sandboxed-ro`](sandboxed-ro) - self-locating wrapper for the read-only profile
 
 ## License
 
