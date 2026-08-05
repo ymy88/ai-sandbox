@@ -86,6 +86,8 @@
 (allow file-write* (subpath (string-append (param "HOME") "/.pnpm-store")))
 (allow file-write* (subpath (string-append (param "HOME") "/.npm")))
 (allow file-write* (subpath (string-append (param "HOME") "/.ollama")))
+(allow file-write* (subpath (string-append (param "HOME") "/Applications/flutter/bin/cache")))   ; Flutter SDK cache (artifacts, snapshots, stamps)
+(allow file-write* (subpath (string-append (param "HOME") "/.pub-cache")))   ; Dart/Flutter package cache (`flutter pub get` downloads here)
 
 ;; ---- app runtime state (writable; Electron/native apps need it) ----
 (allow file-write* (subpath (string-append (param "HOME") "/Library/Logs")))
