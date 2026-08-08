@@ -1,15 +1,15 @@
 #!/bin/sh
 # =====================================================================
-#  install.sh - install the `sandboxed` shell function into your shell rc.
+#  install.sh - install the `sb` shell function into your shell rc.
 #
 #  The function points at the ai-sandbox.sb that lives in THIS repo, so nothing
 #  needs to be copied to ~. Re-run any time; it refreshes the block in place.
 #
-#    ./install.sh            install (or refresh) the `sandboxed` function
+#    ./install.sh            install (or refresh) the `sb` function
 #    ./install.sh --remove   uninstall the function
 #
 #  After install, start a new shell (or `source ~/.zshrc`), then:
-#    cd ~/your/project && sandboxed claude
+#    cd ~/your/project && sb claude
 # =====================================================================
 set -eu
 
@@ -67,11 +67,11 @@ if [ "${1:-}" = "--remove" ]; then
 fi
 
 # --- the function (SB path baked in; $HOME/$PWD/$@ expand at call time) ---
-func="sandboxed() {
+func="sb() {
   sandbox-exec -f \"$SB\" \\
     -D HOME=\"\$HOME\" -D WORKSPACE=\"\$PWD\" \"\$@\"
 }
-sandboxed-ro() {
+sb-ro() {
   sandbox-exec -f \"$SB_RO\" \\
     -D HOME=\"\$HOME\" -D WORKSPACE=\"\$PWD\" \"\$@\"
 }"
@@ -92,6 +92,6 @@ if grep -q -- "$MARK_BEGIN" "$RC" 2>/dev/null && grep -q -- "$MARK_END" "$RC" 2>
 fi
 printf '\n%s\n' "$block" >> "$RC"
 
-printf 'Installed the `sandboxed` function into: %s\n' "$RC"
+printf 'Installed the `sb` function into: %s\n' "$RC"
 printf '  profile: %s\n' "$SB"
-printf '\nRestart your shell (or: source "%s"), then:\n  cd ~/your/project && sandboxed claude\n' "$RC"
+printf '\nRestart your shell (or: source "%s"), then:\n  cd ~/your/project && sb claude\n' "$RC"

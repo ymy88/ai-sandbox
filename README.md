@@ -43,7 +43,7 @@ cd ai-sandbox
 ./install.sh
 ```
 
-`install.sh` detects the repo directory and writes a `sandboxed` shell function
+`install.sh` detects the repo directory and writes a `sb` shell function
 into your `~/.zshrc` (or `~/.bashrc`) that points at `ai-sandbox.sb` in the repo.
 Nothing is copied to `~`. Re-run it any time to refresh; uninstall with
 `./install.sh --remove`.
@@ -52,33 +52,24 @@ Then start a new shell (or `source ~/.zshrc`) and:
 
 ```sh
 cd ~/your/project
-sandboxed claude          # or opencode / codex / gemini / aider / ...
+sb claude          # or opencode / codex / gemini / aider / ...
 ```
 
 `WORKSPACE` is the directory you launch from - the only project tree the agent
 may edit. Child processes inherit the sandbox, so a `bash` the agent spawns is
 restricted the same way.
 
-### No-install alternative
-
-Run the wrapper script directly, without touching your rc:
-
-```sh
-cd ~/your/project
-/path/to/ai-sandbox/sandboxed claude
-```
-
 ### Read-only / analyze mode
 
 For query/analysis work where the agent should **not** modify the code, use the
-stricter `sandboxed-ro` (profile: `ai-sandbox-ro.sb`). It keeps reads wide open
+stricter `sb-ro` (profile: `ai-sandbox-ro.sb`). It keeps reads wide open
 and network allowed, but makes the **project dir (incl. `.git`) read-only** and
 locks down toolchain installs and global git config, while still letting the
 agent write its own session/config, caches, and temp.
 
 ```sh
 cd ~/your/project
-sandboxed-ro claude          # analyze only; cannot edit the project or .git
+sb-ro claude          # analyze only; cannot edit the project or .git
 ```
 
 `git log/diff/show/blame` work; `commit/checkout/stash/fetch/pull`, file edits,
@@ -112,9 +103,7 @@ login`, …) still fail - run those outside, the agent reads tokens inside.
   tweak the allow/deny lists to taste)
 - [`ai-sandbox-ro.sb`](ai-sandbox-ro.sb) - stricter read-only/analyze profile
   (project + toolchains read-only; AI session/caches writable)
-- [`install.sh`](install.sh) - installs the `sandboxed` and `sandboxed-ro` shell functions
-- [`sandboxed`](sandboxed) - self-locating wrapper script (no-install option)
-- [`sandboxed-ro`](sandboxed-ro) - self-locating wrapper for the read-only profile
+- [`install.sh`](install.sh) - installs the `sb` and `sb-ro` shell functions
 
 ## License
 

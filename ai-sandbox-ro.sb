@@ -27,7 +27,7 @@
 ;;    sandbox-exec -f ai-sandbox-ro.sb \
 ;;      -D HOME="$HOME" -D WORKSPACE="$PWD" \
 ;;      <command...>
-;;  Or, after install.sh:  sandboxed-ro <command...>
+;;  Or, after install.sh:  sb-ro <command...>
 ;;
 ;;  PARAMETERS:
 ;;    HOME       absolute path of your home dir       (e.g. /Users/you)
