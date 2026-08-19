@@ -56,6 +56,8 @@
 (allow file-write* (subpath (string-append (param "HOME") "/.cursor")))
 (allow file-write* (subpath (string-append (param "HOME") "/.config/cursor")))
 (allow file-write* (subpath (string-append (param "HOME") "/.pi")))
+(allow file-write* (subpath (string-append (param "HOME") "/.arkcli")))   ; arkcli (Volcano Ark CLI) - config + SSO token refresh
+(allow file-write* (regex (string-append "^" (param "HOME") "/\\.arkcli-bytecloud(\\.staging-[0-9]+)?$")))   ; arkcli per-run staging temp dir in $HOME root (random suffix; `subpath` can't glob)
 (allow file-write* (subpath (string-append (param "HOME") "/.agents")))
 (allow file-write* (subpath (string-append (param "HOME") "/.continue")))
 (allow file-write* (subpath (string-append (param "HOME") "/.config/continue")))
@@ -179,6 +181,10 @@
 ;;  * The agent's OWN config/auth files (e.g. ~/.claude/.credentials.json,
 ;;    ~/.codex/auth.json) are readable AND writable (they live under the
 ;;    allowlisted AI config dirs) - the agent needs to refresh its own login.
+;;    Same for arkcli: ~/.arkcli holds its SSO tokens and is writable so
+;;    `arkcli` can refresh them. arkcli additionally creates a random
+;;    `~/.arkcli-bytecloud.staging-<num>` temp dir directly under $HOME on
+;;    every run (hence the `regex` allow above; `subpath` can't match it).
 ;;
 ;;  * OPTIONAL - make READS stricter too (uncomment to also block these):
 ;;    ; (deny file-read* (subpath (string-append (param "HOME") "/Library/Mail")))

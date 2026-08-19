@@ -58,6 +58,8 @@
 (allow file-write* (subpath (string-append (param "HOME") "/.cursor")))
 (allow file-write* (subpath (string-append (param "HOME") "/.config/cursor")))
 (allow file-write* (subpath (string-append (param "HOME") "/.pi")))
+(allow file-write* (subpath (string-append (param "HOME") "/.arkcli")))   ; arkcli (Volcano Ark CLI) - config + SSO token refresh
+(allow file-write* (regex (string-append "^" (param "HOME") "/\\.arkcli-bytecloud(\\.staging-[0-9]+)?$")))   ; arkcli per-run staging temp dir in $HOME root (random suffix; `subpath` can't glob)
 (allow file-write* (subpath (string-append (param "HOME") "/.agents")))
 (allow file-write* (subpath (string-append (param "HOME") "/.continue")))
 (allow file-write* (subpath (string-append (param "HOME") "/.config/continue")))
